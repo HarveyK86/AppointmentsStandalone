@@ -4,6 +4,7 @@ import demo.nakedapp.entity.Appointment;
 
 import org.springframework.data.repository.CrudRepository;
 
-public interface AppointmentRepository extends CrudRepository<Appointment, Long> {
+public interface AppointmentRepository
+  extends CrudRepository<Appointment, Long> {
 
 }
