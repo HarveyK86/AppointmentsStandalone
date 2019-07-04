@@ -24,17 +24,37 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+/**
+ * <p>
+ * <code>AppointmentController</code> is a controller for the
+ * {@link Appointment} entity that uses a provided
+ * {@link AppointmentRepository}.
+ * </p>
+ * <p>
+ * <code>AppointmentController</code> contains mappings for;
+ * <ul>
+ * <li><code>/appointments</code> - {@link #appointments(String, Model)}</li>
+ * <li><code>/appointmentsCreate</code> -
+ * {@link #appointmentsCreate(String, String, String, String, String, Model)</li>
+ * </ul>
+ * </p>
+ * 
+ * @see Appointment
+ * @see AppointmentRepository
+ * @see #appointments(String, Model)
+ * @see #appointmentsCreate(String, String, String, String, String, Model)
+ */
 @Controller
 public final class AppointmentController {
 
-  @Autowired
-  private AppointmentRepository repository;
+  private final AppointmentRepository appointmentRepository;
 
   private final List<TimeZone> timeZones = new ArrayList<>();
 
   private static final String APPOINTMENTS_PARAM = "appointments";
   private static final String TIME_ZONES_PARAM = "timeZones";
   private static final String DEFAULT_TIME_ZOME_PARAM = "defaultTimeZone";
+  private static final String ERROR_PARAM = "error";
 
   private static final String APPOINMENTS_TEMPLATE = "appointments";
 
@@ -48,8 +68,35 @@ public final class AppointmentController {
   private static final Logger LOGGER =
     LoggerFactory.getLogger(AppointmentController.class);
 
-  public AppointmentController() {
+  /**
+   * <p>
+   * Creates a new instance of <code>AppointmentController</code> using the
+   * specified <b>appointmentRepository</b>.
+   * </p>
+   * <p>
+   * Also populates the list of available <code>TimeZone</code>s.
+   * </p>
+   * 
+   * @param appointmentRepository An instance of {@link AppointmentRepository}.
+   *          This cannot be <code>null</code>.
+   * 
+   * @throws IllegalArgumentException If <b>appointmentRepository</b> is
+   *          <code>null</code>.
+   * 
+   * @see AppointmentRepository
+   */
+  public AppointmentController(
+    @Autowired
+    final AppointmentRepository appointmentRepository
+  ) {
     super();
+    if (appointmentRepository == null) {
+      final String message = String.format("Illegal argument; "
+        + "appointmentRepository=={%s}", appointmentRepository != null);
+      throw new IllegalArgumentException(message);
+    }
+    LOGGER.info("AppointmentController[appointmentRepository]");
+    this.appointmentRepository = appointmentRepository;
     final String[] timeZoneIds = TimeZone.getAvailableIDs();
     Matcher matcher;
     TimeZone timeZone;
@@ -89,23 +136,98 @@ public final class AppointmentController {
     });
   }
 
+  /**
+   * <p>
+   * <code>appointments</code> is a mapping for <code>GET</code> requests to
+   * <code>/appointments</code>.
+   * </p>
+   * <p>
+   * <b>defaultTimeZone</b> indicates the default value of the time zone select
+   * box in the appointment creation form as well as the time zone existing
+   * appointments will be displayed in.
+   * </p>
+   * 
+   * @param defaultTimeZone The ID of the default <code>TimeZone</code>; this is
+   *          mapped to the <code>tz</code> URL parameter, if the URL parameter
+   *          not provided this will default to "Etc/GMT" for Greenwich Mean
+   *          Time. This parameter cannot be <code>null</code>, empty or
+   *          whitespace only.
+   * @param model The model returned to the <code>Thymeleaf</code> template.
+   *          This parameter cannot be <code>null</code>.
+   * 
+   * @return The name of the <code>Thymeleaf</code> template to render upon
+   *          successful execution.
+   * 
+   * @throws IllegalArgumentException If <b>model</b> is <code>null</code> or if
+   *          <b>defaultTimeZone</b> is <code>null</code> empty or whitespace
+   *          only.
+   */
   @GetMapping("/appointments")
   public String appointments(
     @RequestParam(name="tz", required=false, defaultValue="Etc/GMT")
     final String defaultTimeZone,
     final Model model) {
-    if (StringUtils.isBlank(defaultTimeZone)) {
+    if (StringUtils.isBlank(defaultTimeZone) || model == null) {
       final String message = String.format("Illegal argument; "
-        + "defaultTimeZone==%s", defaultTimeZone);
+        + "defaultTimeZone==%s, model=={%s}", defaultTimeZone, model != null);
       throw new IllegalArgumentException(message);
     }
-    final String message = String.format("appointments[defaultTimeZone=='%s']",
-      defaultTimeZone);
+    final String message = String.format("appointments[defaultTimeZone=='%s', "
+      + "model]", defaultTimeZone);
     LOGGER.info(message);
     this.populateModel(model, defaultTimeZone);
     return APPOINMENTS_TEMPLATE;
   }
 
+  /**
+   * <p>
+   * <code>appointmentsCreate</code> is a mapping for <code>POST</code> requests
+   * to <code>/appointments/create</code>.
+   * </p>
+   * <p>
+   * <code>appointmentsCreate</code> creates a new instance of
+   * {@link Appointment} using the specified parameters.
+   * </p>
+   * <p>
+   * <b>defaultTimeZone</b> indicates the default value of the time zone select
+   * box in the appointment creation form as well as the time zone existing
+   * appointments will be displayed in.
+   * </p>
+   * 
+   * @param date The date for the new instance of <code>Appointment</code>; this
+   *          is mapped to the <code>date</code> form parameter and must be in
+   *          the format <code>dd/MM/yyyy</code>. This parameter cannot be
+   *          <code>null</code>, empty or whitespace only.
+   * @param time The time of day for the new instance of
+   *          <code>Appointment</code>; this is mapped to the <code>time</code>
+   *          form parameter and must be in the format <code>HH:mm</code>. This
+   *          parameter cannot be <code>null</code>, empty or whitespace only.
+   * @param timeZone The ID of the <code>TimeZone</code> for the <b>time</b> for
+   *          the new instance of <code>Appointment</code>; this is mapped to
+   *          the <code>timeZone</code> form parameter. This parameter cannot be
+   *          <code>null</code>, empty or whitesapce only.
+   * @param description The description for the new instance of
+   *          <code>Appointment</code>; this is mapped to the
+   *          <code>description</code> form parameter. This parameter cannot be
+   *          <code>null</code>, empty or whitespace only.
+   * @param defaultTimeZone The ID of the default <code>TimeZone</code>; this is
+   *          mapped to the <code>tz</code> URL parameter, if the URL parameter
+   *          not provided this will default to "Etc/GMT" for Greenwich Mean
+   *          Time. This parameter cannot be <code>null</code>, empty or
+   *          whitespace only.
+   * @param model The model returned to the <code>Thymeleaf</code> template.
+   *          This parameter cannot be <code>null</code>.
+   * 
+   * @return The name of the <code>Thymeleaf</code> template to render upon
+   *          successful execution.
+   * 
+   * @throws IllegalArgumentException If <b>model</b> is <code>null</code> or if
+   *          <b>date</b>, <b>time</b>, <b>timeZone</b>, <b>description</b> or
+   *          <b>defaultTimeZone</b> is <code>null</code> empty or whitespace
+   *          only.
+   * 
+   * @see Appointment
+   */
   @PostMapping("/appointments/create")
   public String appointmentsCreate(
     @RequestParam(name="date", required=true)
@@ -121,15 +243,16 @@ public final class AppointmentController {
     final Model model) {
     if (StringUtils.isBlank(date) || StringUtils.isBlank(time)
       || StringUtils.isBlank(timeZone) || StringUtils.isBlank(description)
-      || StringUtils.isBlank(defaultTimeZone)) {
+      || StringUtils.isBlank(defaultTimeZone) || model == null) {
       final String message = String.format("Illegal argument; date==%s, "
-        + "time==%s, timeZone==%s, description==%s, defaultTimeZone==%s", date,
-        time, timeZone, description, defaultTimeZone);
+        + "time==%s, timeZone==%s, description==%s, defaultTimeZone==%s, "
+        + "model=={%s}", date, time, timeZone, description, defaultTimeZone,
+        model != null);
       throw new IllegalArgumentException(message);
     }
     String message = String.format("appointmentsCreate[date=='%s', time=='%s', "
-      + "timeZone=='%s', description=='%s', defaultTimeZone=='%s']", date, time,
-      timeZone, description, defaultTimeZone);
+      + "timeZone=='%s', description=='%s', defaultTimeZone=='%s'], model",
+      date, time, timeZone, description, defaultTimeZone);
     LOGGER.info(message);
     final TimeZone timeZoneObject = TimeZone.getTimeZone(timeZone);
     SIMPLE_DATE_FORMAT.setTimeZone(timeZoneObject);
@@ -137,20 +260,22 @@ public final class AppointmentController {
     try {
       final Date dateObject = SIMPLE_DATE_FORMAT.parse(dateTime);
       final Appointment appointment = new Appointment(dateObject, description);
-      this.repository.save(appointment);
+      this.appointmentRepository.save(appointment);
     } catch(final ParseException e) {
       message = e.getMessage();
-      model.addAttribute("error", message);
+      model.addAttribute(ERROR_PARAM, message);
       message = String.format("ParseException caught while attempting to parse "
-        + "date and time. [dateTime=='%s']", dateTime);
-      LOGGER.error(message, e);
+        + "date and time. The date and time should be in the format "
+        + "\"dd/MM/yyyy HH:mm\". [dateTime=='%s']", dateTime);
+      LOGGER.error(message);
     }
     this.populateModel(model, defaultTimeZone);
     return APPOINMENTS_TEMPLATE;
   }
 
   private void populateModel(final Model model, final String defaultTimeZone) {
-    final Iterable<Appointment> appointments = this.repository.findAll();
+    final Iterable<Appointment> appointments =
+      this.appointmentRepository.findAll();
     model.addAttribute(APPOINTMENTS_PARAM, appointments);
     model.addAttribute(TIME_ZONES_PARAM, this.timeZones);
     final TimeZone defaultTimeZoneObject =
