@@ -156,9 +156,6 @@ public final class AppointmentController {
     final TimeZone defaultTimeZoneObject =
       TimeZone.getTimeZone(defaultTimeZone);
     model.addAttribute(DEFAULT_TIME_ZOME_PARAM, defaultTimeZoneObject);
-    /*final String message = String.format("populateModel setting model "
-      + "[model==%s]", model);
-    LOGGER.info(message);*/
   }
 
 }
