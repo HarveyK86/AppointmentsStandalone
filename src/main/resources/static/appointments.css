@@ -1,0 +1,28 @@
+.error {
+  margin-top: 1rem;
+}
+
+h4 {
+  margin-top: 1.5rem;
+}
+
+.card .table {
+  margin: 0px;
+}
+
+.card .table th.description-column, .card .table th.date-column {
+  border-top: 0px;
+}
+
+.description-column {
+  width: 75%;
+}
+
+.date-column {
+  width: 25%;
+}
+
+.inline-label {
+  margin-top: 7px;
+  font-weight: bold;
+}

@@ -142,40 +142,74 @@ public final class AppointmentController {
    * <code>/appointments</code>.
    * </p>
    * <p>
-   * <b>defaultTimeZone</b> indicates the default value of the time zone select
-   * box in the appointment creation form as well as the time zone existing
-   * appointments will be displayed in.
+   * <b>defaultTimeZone</b> is a URL parameter that specifies the ID of the
+   * default <code>TimeZone</code>. The default time zone is used as the default
+   * value of the time zone select box in the appointment creation form as well
+   * as the time zone existing appointments will be displayed in.
+   * </p>
+   * <p>
+   * <b>simulateError</b> is a URL parameter that specifies if a test Exception
+   * should be thrown.
    * </p>
    * 
    * @param defaultTimeZone The ID of the default <code>TimeZone</code>; this is
    *          mapped to the <code>tz</code> URL parameter, if the URL parameter
-   *          not provided this will default to "Etc/GMT" for Greenwich Mean
+   *          is not provided this will default to "Etc/GMT" for Greenwich Mean
    *          Time. This parameter cannot be <code>null</code>, empty or
    *          whitespace only.
+   * @param simulateError Indicates if a test Exception should be thrown; this
+   *          is mapped to the <code>e</code> URL parameter, if the URL
+   *          parameter is not provided this will default to "false" to indicate
+   *          that a test Exception should not be thrown. This parameter cannot
+   *          be <code>null</code>, empty or whitespace only.
    * @param model The model returned to the <code>Thymeleaf</code> template.
    *          This parameter cannot be <code>null</code>.
    * 
    * @return The name of the <code>Thymeleaf</code> template to render upon
    *          successful execution.
    * 
-   * @throws IllegalArgumentException If <b>model</b> is <code>null</code> or if
-   *          <b>defaultTimeZone</b> is <code>null</code> empty or whitespace
-   *          only.
+   * @throws IllegalArgumentException If <b>model</b> is <code>null</code>.
    */
   @GetMapping("/appointments")
   public String appointments(
     @RequestParam(name="tz", required=false, defaultValue="Etc/GMT")
     final String defaultTimeZone,
+    @RequestParam(name="e", required=false, defaultValue="false")
+    final String simulateError,
     final Model model) {
-    if (StringUtils.isBlank(defaultTimeZone) || model == null) {
-      final String message = String.format("Illegal argument; "
-        + "defaultTimeZone==%s, model=={%s}", defaultTimeZone, model != null);
-      throw new IllegalArgumentException(message);
+    if (model == null) {
+      throw new IllegalArgumentException("Illegal argument; no model "
+        + "specified");
     }
-    final String message = String.format("appointments[defaultTimeZone=='%s', "
-      + "model]", defaultTimeZone);
-    LOGGER.info(message);
-    this.populateModel(model, defaultTimeZone);
+    try {
+      if (StringUtils.isBlank(defaultTimeZone)
+        || StringUtils.isBlank(simulateError)
+        || Boolean.parseBoolean(simulateError)) {
+        final String message = String.format("Illegal argument; "
+          + "defaultTimeZone==%s, simulateError==%s", defaultTimeZone,
+          simulateError);
+        throw new IllegalArgumentException(message);
+      }
+      final String message = String.format("appointments["
+        + "defaultTimeZone=='%s']", defaultTimeZone);
+      LOGGER.info(message);
+    } catch(final Exception e) {
+      String message = e.getMessage();
+      model.addAttribute(ERROR_PARAM, message);
+      message = String.format("Exception caught by /appointments endpoint: "
+        + "%s", message);
+      if (e instanceof IllegalArgumentException) {
+        LOGGER.warn(message);
+      } else {
+        LOGGER.warn(message, e);
+      }
+    } finally {
+      try {
+        this.populateModel(model, defaultTimeZone);
+      } catch(final Exception e) {
+        LOGGER.error("Unable to populate model", e);
+      }
+    }
     return APPOINMENTS_TEMPLATE;
   }
 
@@ -186,12 +220,16 @@ public final class AppointmentController {
    * </p>
    * <p>
    * <code>appointmentsCreate</code> creates a new instance of
-   * {@link Appointment} using the specified parameters.
+   * {@link Appointment} using the specified form parameters.
+   * </p>
+   * <b>defaultTimeZone</b> is a URL parameter that specifies the ID of the
+   * default <code>TimeZone</code>. The default time zone is used as the default
+   * value of the time zone select box in the appointment creation form as well
+   * as the time zone existing appointments will be displayed in.
    * </p>
    * <p>
-   * <b>defaultTimeZone</b> indicates the default value of the time zone select
-   * box in the appointment creation form as well as the time zone existing
-   * appointments will be displayed in.
+   * <b>simulateError</b> is a URL parameter that specifies if a test Exception
+   * should be thrown.
    * </p>
    * 
    * @param date The date for the new instance of <code>Appointment</code>; this
@@ -212,19 +250,21 @@ public final class AppointmentController {
    *          <code>null</code>, empty or whitespace only.
    * @param defaultTimeZone The ID of the default <code>TimeZone</code>; this is
    *          mapped to the <code>tz</code> URL parameter, if the URL parameter
-   *          not provided this will default to "Etc/GMT" for Greenwich Mean
+   *          is not provided this will default to "Etc/GMT" for Greenwich Mean
    *          Time. This parameter cannot be <code>null</code>, empty or
    *          whitespace only.
+   * @param simulateError Indicates if a test Exception should be thrown; this
+   *          is mapped to the <code>e</code> URL parameter, if the URL
+   *          parameter is not provided this will default to "false" to indicate
+   *          that a test Exception should not be thrown. That parameter cannot
+   *          be <code>null</code>, empty or whitespace only.
    * @param model The model returned to the <code>Thymeleaf</code> template.
    *          This parameter cannot be <code>null</code>.
    * 
    * @return The name of the <code>Thymeleaf</code> template to render upon
    *          successful execution.
    * 
-   * @throws IllegalArgumentException If <b>model</b> is <code>null</code> or if
-   *          <b>date</b>, <b>time</b>, <b>timeZone</b>, <b>description</b> or
-   *          <b>defaultTimeZone</b> is <code>null</code> empty or whitespace
-   *          only.
+   * @throws IllegalArgumentException If <b>model</b> is <code>null</code>.
    * 
    * @see Appointment
    */
@@ -240,36 +280,54 @@ public final class AppointmentController {
     final String description,
     @RequestParam(name="tz", required=false, defaultValue="Etc/GMT")
     final String defaultTimeZone,
+    @RequestParam(name="e", required=false, defaultValue="false")
+    final String simulateError,
     final Model model) {
-    if (StringUtils.isBlank(date) || StringUtils.isBlank(time)
-      || StringUtils.isBlank(timeZone) || StringUtils.isBlank(description)
-      || StringUtils.isBlank(defaultTimeZone) || model == null) {
-      final String message = String.format("Illegal argument; date==%s, "
-        + "time==%s, timeZone==%s, description==%s, defaultTimeZone==%s, "
-        + "model=={%s}", date, time, timeZone, description, defaultTimeZone,
-        model != null);
-      throw new IllegalArgumentException(message);
+    if (model == null) {
+      throw new IllegalArgumentException("Illegal argument; no model "
+        + "specified");
     }
-    String message = String.format("appointmentsCreate[date=='%s', time=='%s', "
-      + "timeZone=='%s', description=='%s', defaultTimeZone=='%s'], model",
-      date, time, timeZone, description, defaultTimeZone);
-    LOGGER.info(message);
-    final TimeZone timeZoneObject = TimeZone.getTimeZone(timeZone);
-    SIMPLE_DATE_FORMAT.setTimeZone(timeZoneObject);
-    final String dateTime = String.format("%s %s", date, time);
     try {
+      if (StringUtils.isBlank(date) || StringUtils.isBlank(time)
+        || StringUtils.isBlank(timeZone) || StringUtils.isBlank(description)
+        || StringUtils.isBlank(defaultTimeZone)
+        || StringUtils.isBlank(simulateError)
+        || Boolean.parseBoolean(simulateError)) {
+        final String message = String.format("Illegal argument; date==%s, "
+          + "time==%s, timeZone==%s, description==%s, defaultTimeZone==%s, "
+          + "simulateError==%s", date, time, timeZone, description,
+          defaultTimeZone, simulateError);
+        throw new IllegalArgumentException(message);
+      }
+      final String message = String.format("appointmentsCreate[date=='%s', "
+        + "time=='%s', timeZone=='%s', description=='%s', "
+        + "defaultTimeZone=='%s']", date, time, timeZone, description,
+        defaultTimeZone);
+      LOGGER.info(message);
+      final TimeZone timeZoneObject = TimeZone.getTimeZone(timeZone);
+      SIMPLE_DATE_FORMAT.setTimeZone(timeZoneObject);
+      final String dateTime = String.format("%s %s", date, time);
       final Date dateObject = SIMPLE_DATE_FORMAT.parse(dateTime);
       final Appointment appointment = new Appointment(dateObject, description);
       this.appointmentRepository.save(appointment);
-    } catch(final ParseException e) {
-      message = e.getMessage();
+    } catch (final Exception e) {
+      String message = e.getMessage();
       model.addAttribute(ERROR_PARAM, message);
-      message = String.format("ParseException caught while attempting to parse "
-        + "date and time. The date and time should be in the format "
-        + "\"dd/MM/yyyy HH:mm\". [dateTime=='%s']", dateTime);
-      LOGGER.error(message);
+      message = String.format("Exception caught by /appointmentsCreate "
+        + "endpoint: %s", message);
+      if (e instanceof IllegalArgumentException
+        || e instanceof ParseException) {
+        LOGGER.warn(message);
+      } else {
+        LOGGER.warn(message, e);
+      }
+    } finally {
+      try {
+        this.populateModel(model, defaultTimeZone);
+      } catch (final Exception e) {
+        LOGGER.error("Unable to populate model", e);
+      }
     }
-    this.populateModel(model, defaultTimeZone);
     return APPOINMENTS_TEMPLATE;
   }
 
@@ -278,9 +336,11 @@ public final class AppointmentController {
       this.appointmentRepository.findAll();
     model.addAttribute(APPOINTMENTS_PARAM, appointments);
     model.addAttribute(TIME_ZONES_PARAM, this.timeZones);
-    final TimeZone defaultTimeZoneObject =
-      TimeZone.getTimeZone(defaultTimeZone);
-    model.addAttribute(DEFAULT_TIME_ZOME_PARAM, defaultTimeZoneObject);
+    if (StringUtils.isNotBlank(defaultTimeZone)) {
+      final TimeZone defaultTimeZoneObject =
+        TimeZone.getTimeZone(defaultTimeZone);
+      model.addAttribute(DEFAULT_TIME_ZOME_PARAM, defaultTimeZoneObject);
+    }
   }
 
 }
