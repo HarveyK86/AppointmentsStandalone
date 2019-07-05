@@ -38,15 +38,15 @@ public final class AppointmentControllerTest {
   /**
    * <b>Given</b> a <code>null</code> {@link AppointmentRepository}<br>
    * <b>when</b> creating a new instance of {@link AppointmentController}<br>
-   * <b>then</b> then constructor <i>should</i> throw an
+   * <b>then</b> the constructor <i>should</i> throw an
    * <code>IllegalArgumentException</code>.
    * 
-   * @see AppointmentRepository
+   * @see demo.nakedapp.repository.AppointmentRepository
    * @see AppointmentController
    */
   @Test(expected=IllegalArgumentException.class)
   public void constructorShouldThrowIllegalArgument() {
-    // Givem a null AppointmentRepository
+    // Given a null AppointmentRepository
     final AppointmentRepository appointmentRepository = null;
     // when creating a new instance of AppointmentController
     new AppointmentController(appointmentRepository);
@@ -60,7 +60,7 @@ public final class AppointmentControllerTest {
    * <b>when</b> creating a new instance of {@link AppointmentController}<br>
    * <b>then</b> the constructor <i>should</i> execute without exception.
    * 
-   * @see AppointmentRepository
+   * @see demo.nakedapp.repository.AppointmentRepository
    * @see AppointmentController
    */
   @Test

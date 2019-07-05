@@ -39,8 +39,8 @@ import org.springframework.web.bind.annotation.RequestParam;
  * </ul>
  * </p>
  * 
- * @see Appointment
- * @see AppointmentRepository
+ * @see demo.nakedapp.entity.Appointment
+ * @see demo.nakedapp.repository.AppointmentRepository
  * @see #appointments(String, Model)
  * @see #appointmentsCreate(String, String, String, String, String, Model)
  */
@@ -83,7 +83,7 @@ public final class AppointmentController {
    * @throws IllegalArgumentException If <b>appointmentRepository</b> is
    *          <code>null</code>.
    * 
-   * @see AppointmentRepository
+   * @see demo.nakedapp.repository.AppointmentRepository
    */
   public AppointmentController(
     @Autowired
@@ -266,7 +266,7 @@ public final class AppointmentController {
    * 
    * @throws IllegalArgumentException If <b>model</b> is <code>null</code>.
    * 
-   * @see Appointment
+   * @see demo.nakedapp.entity.Appointment
    */
   @PostMapping("/appointments/create")
   public String appointmentsCreate(
