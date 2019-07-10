@@ -2,7 +2,6 @@
 Naked SpringBoot/JPA App
 
 ## TODO list
-  * Max characters for description
   * appointments redirect
   * TimeZone selector
   * Appointment deletion
