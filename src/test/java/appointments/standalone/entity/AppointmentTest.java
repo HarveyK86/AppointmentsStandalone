@@ -1,4 +1,4 @@
-package demo.nakedapp.entity;
+package appointments.standalone.entity;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

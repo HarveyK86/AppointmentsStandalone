@@ -1,7 +1,7 @@
-package demo.nakedapp.controller;
+package appointments.standalone.controller;
 
-import demo.nakedapp.entity.Appointment;
-import demo.nakedapp.repository.AppointmentRepository;
+import appointments.standalone.entity.Appointment;
+import appointments.standalone.repository.AppointmentRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

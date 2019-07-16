@@ -1,6 +1,6 @@
-package demo.nakedapp.controller;
+package appointments.standalone.controller;
 
-import demo.nakedapp.repository.AppointmentRepository;
+import appointments.standalone.repository.AppointmentRepository;
 
 import java.util.Map;
 import java.util.HashMap;

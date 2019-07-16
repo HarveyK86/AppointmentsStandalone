@@ -1,6 +1,6 @@
-package demo.nakedapp.repository;
+package appointments.standalone.repository;
 
-import demo.nakedapp.entity.Appointment;
+import appointments.standalone.entity.Appointment;
 
 import org.springframework.data.repository.CrudRepository;
 
