@@ -37,15 +37,15 @@ Standalone Appointments App
   * `exit`
 
 ### Scripts
-## Start Database
+#### Start Database
   * `cd AppointmentsStandalone`
   * `./init.sh`
 
-## Run Tests
+#### Run Tests
   * `cd AppointmentsStandalone`
   * `./test.sh`
 
-## Run App
+#### Run App
   * `cd AppointmentsStandalone`
   * `./run.sh`
 
